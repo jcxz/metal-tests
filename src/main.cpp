@@ -70,8 +70,8 @@ int main()
 	std::memcpy(buf2->contents(), b.data(), elementCount * sizeof(float));
 
 	// Create command buffer
-	NS::SharedPtr<MTL::CommandBuffer> pCommandBuffer = TransferPtr(pCommandQueue->commandBuffer());
-	NS::SharedPtr<MTL::ComputeCommandEncoder> pEncoder = TransferPtr(pCommandBuffer->computeCommandEncoder());
+	MTL::CommandBuffer* pCommandBuffer = pCommandQueue->commandBuffer();
+	MTL::ComputeCommandEncoder* pEncoder = pCommandBuffer->computeCommandEncoder();
 
 	pEncoder->setComputePipelineState(pPSO.get());
 	pEncoder->setBuffer(buf1.get(), 0, 0);
