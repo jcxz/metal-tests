@@ -1,21 +1,44 @@
 #include "mtl.h"
-//#include "add.h"
+#include "add.h"
 #include <algorithm>
+#include <random>
+#include <chrono>
 #include <iostream>
 
 
 
-int main()
+static std::vector<float> GenerateData(const size_t n)
 {
-	// a global autorelease pool for all temporary objects released with autorelease (otherwise they would leak)
-	NS::SharedPtr<NS::AutoreleasePool> pAutoReleasePool = TransferPtr(NS::AutoreleasePool::alloc()->init());
+	static std::random_device sRngSeed;
+	static std::mt19937 sRng(sRngSeed());
+	static std::uniform_real_distribution<float> sDist(0.0f, 1000.0f);
 
+	std::vector<float> out;
+	for (size_t i = 0; i < n; ++i)
+	{
+		out.push_back(sDist(sRng));
+	}
+
+	return out;
+}
+
+static bool AddCPU(const float* a, const float* b, float* c, const size_t n)
+{
+	for (uint32_t i = 0; i < n; ++i)
+	{
+		add_kernel(i, a, b, c);
+	}
+	return true;
+}
+
+static bool AddGPU(const float* a, const float* b, float* c, const size_t n)
+{
 	// create default system device
 	NS::SharedPtr<MTL::Device> pDevice = TransferPtr(MTL::CreateSystemDefaultDevice());
 	if (!pDevice)
 	{
 		std::cerr << "Failed to create system default device." << std::endl;;
-		return 1;
+		return false;
 	}
 
 	// load shaders
@@ -23,7 +46,7 @@ int main()
 	if (!pLibrary)
 	{
 		std::cerr << "Failed to load default library." << std::endl;;
-		return 1;
+		return false;
 	}
 
 	// create compute pipeline for the add_kernel shader
@@ -33,7 +56,7 @@ int main()
 	if (!pPSO)
 	{
 		std::cerr << "Failed to load create compute pipeline: " << pError->localizedDescription()->utf8String() << std::endl;;
-		return 1;
+		return false;
 	}
 
 	// create command queue for submitting commands to the GPU
@@ -41,27 +64,16 @@ int main()
 	if (!pCommandQueue)
 	{
 		std::cerr << "Failed to create command queue" << std::endl;
-		return 1;
-	}
-
-	// Create input data
-	const size_t elementCount = 10;
-	std::vector<float> a(elementCount);
-	std::vector<float> b(elementCount);
-
-	for (size_t i = 0; i < elementCount; ++i)
-	{
-		a[i] = float(i);
-		b[i] = float(i * 2);
+		return false;
 	}
 
 	// Create buffers
-	NS::SharedPtr<MTL::Buffer> buf1 = TransferPtr(pDevice->newBuffer(elementCount * sizeof(float), MTL::ResourceStorageModeShared));
-	NS::SharedPtr<MTL::Buffer> buf2 = TransferPtr(pDevice->newBuffer(elementCount * sizeof(float), MTL::ResourceStorageModeShared));
-	NS::SharedPtr<MTL::Buffer> result = TransferPtr(pDevice->newBuffer(elementCount * sizeof(float), MTL::ResourceStorageModeShared));
+	NS::SharedPtr<MTL::Buffer> buf1 = TransferPtr(pDevice->newBuffer(n * sizeof(float), MTL::ResourceStorageModeShared));
+	NS::SharedPtr<MTL::Buffer> buf2 = TransferPtr(pDevice->newBuffer(n * sizeof(float), MTL::ResourceStorageModeShared));
+	NS::SharedPtr<MTL::Buffer> result = TransferPtr(pDevice->newBuffer(n * sizeof(float), MTL::ResourceStorageModeShared));
 
-	std::memcpy(buf1->contents(), a.data(), elementCount * sizeof(float));
-	std::memcpy(buf2->contents(), b.data(), elementCount * sizeof(float));
+	std::memcpy(buf1->contents(), a, n * sizeof(float));
+	std::memcpy(buf2->contents(), b, n * sizeof(float));
 
 	// Enqueue GPU commands
 	MTL::CommandBuffer* pCommandBuffer = pCommandQueue->commandBuffer();
@@ -72,9 +84,9 @@ int main()
 	pEncoder->setBuffer(buf2.get(), 0, 1);
 	pEncoder->setBuffer(result.get(), 0, 2);
 
-	MTL::Size gridSize = MTL::Size(elementCount, 1, 1);
+	MTL::Size gridSize = MTL::Size(n, 1, 1);
 
-	NS::UInteger threadGroupSize = std::min(pPSO->maxTotalThreadsPerThreadgroup(), elementCount);
+	NS::UInteger threadGroupSize = std::min(pPSO->maxTotalThreadsPerThreadgroup(), n);
 
 	MTL::Size threadsPerThreadgroup = MTL::Size(threadGroupSize, 1, 1);
 
@@ -85,13 +97,56 @@ int main()
 	pCommandBuffer->commit();
 	pCommandBuffer->waitUntilCompleted();
 
-	// Read results
-	const float* resultData = static_cast<const float*>(result->contents());
+	// Get results
+	std::memcpy(c, static_cast<const float*>(result->contents()), n * sizeof(float));
 
-	for (size_t i = 0; i < elementCount; ++i)
+	return true;
+}
+
+
+int main()
+{
+	// a global autorelease pool for all temporary objects released with autorelease (otherwise they would leak)
+	NS::SharedPtr<NS::AutoreleasePool> pAutoReleasePool = TransferPtr(NS::AutoreleasePool::alloc()->init());
+
+	// Create input data
+	const size_t N = 100000000;
+	std::vector<float> a = GenerateData(N);
+	std::vector<float> b = GenerateData(N);
+
+	// compute on CPU (reference)
+	std::vector<float> cpu(N);
+	auto cpu_t0 = std::chrono::high_resolution_clock::now();
+	if (!AddCPU(a.data(), b.data(), cpu.data(), N))
 	{
-		std::cout << a[i] << " + " << b[i] << " = " << resultData[i] << std::endl;
+		std::cerr << "CPU computation failed" << std::endl;
+		return 1;
 	}
+	auto cpu_t1 = std::chrono::high_resolution_clock::now();
+
+	// compute on GPU
+	std::vector<float> gpu(N);
+	auto gpu_t0 = std::chrono::high_resolution_clock::now();
+	if (!AddGPU(a.data(), b.data(), gpu.data(), N))
+	{
+		std::cerr << "GPU computation failed" << std::endl;
+		return 1;
+	}
+	auto gpu_t1 = std::chrono::high_resolution_clock::now();
+
+	// validate results
+	for (size_t i = 0; i < N; ++i)
+	{
+		if (cpu[i] != gpu[i])
+		{
+			std::cerr << "Invalid results, cpu and gpu differ at element " << i << ": " << cpu[i] << " vs " << gpu[i] << std::endl;
+			return 1;
+		}
+	}
+
+	std::cout << "CPU and GPU produces equivalent outputs" << std::endl;
+	std::cout << "CPU time " << std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(cpu_t1 - cpu_t0).count() << " ms" << std::endl;
+	std::cout << "GPU time " << std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(gpu_t1 - gpu_t0).count() << " ms" << std::endl;
 
 	return 0;
 }
