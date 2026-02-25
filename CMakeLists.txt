@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(HEADERS
 	src/add.h
+	src/common.h
 	src/mtl.h
 )
 
