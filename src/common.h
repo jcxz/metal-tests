@@ -4,6 +4,7 @@
 #define MTL_CONSTANT constant
 #define MTL_DEVICE device
 #define MTL_KERNEL kernel
+#include <metal_stdlib>
 #else
 #define MTL_CONSTANT const
 #define MTL_DEVICE
