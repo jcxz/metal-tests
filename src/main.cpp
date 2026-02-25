@@ -1,19 +1,13 @@
-#define NS_PRIVATE_IMPLEMENTATION
-#define CA_PRIVATE_IMPLEMENTATION
-#define MTL_PRIVATE_IMPLEMENTATION
-#include <Foundation/Foundation.hpp>
-#include <Metal/Metal.hpp>
-#include <QuartzCore/QuartzCore.hpp>
-
+#include "mtl.h"
+//#include "add.h"
 #include <algorithm>
 #include <iostream>
-
-//#include "add.h"
 
 
 
 int main()
 {
+	// a global autorelease pool for all temporary objects released with autorelease (otherwise they would leak)
 	NS::SharedPtr<NS::AutoreleasePool> pAutoReleasePool = TransferPtr(NS::AutoreleasePool::alloc()->init());
 
 	// create default system device
@@ -69,7 +63,7 @@ int main()
 	std::memcpy(buf1->contents(), a.data(), elementCount * sizeof(float));
 	std::memcpy(buf2->contents(), b.data(), elementCount * sizeof(float));
 
-	// Create command buffer
+	// Enqueue GPU commands
 	MTL::CommandBuffer* pCommandBuffer = pCommandQueue->commandBuffer();
 	MTL::ComputeCommandEncoder* pEncoder = pCommandBuffer->computeCommandEncoder();
 
@@ -87,13 +81,14 @@ int main()
 	pEncoder->dispatchThreads(gridSize, threadsPerThreadgroup);
 	pEncoder->endEncoding();
 
+	// execute computation on the GPU and wait for it
 	pCommandBuffer->commit();
 	pCommandBuffer->waitUntilCompleted();
 
 	// Read results
-	float* resultData = static_cast<float*>(result->contents());
+	const float* resultData = static_cast<const float*>(result->contents());
 
-	for (uint32_t i = 0; i < elementCount; ++i)
+	for (size_t i = 0; i < elementCount; ++i)
 	{
 		std::cout << a[i] << " + " << b[i] << " = " << resultData[i] << std::endl;
 	}
