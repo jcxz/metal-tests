@@ -14,6 +14,8 @@ set(HEADERS
 set(SOURCES
 	src/mtl.cpp
 	src/main.cpp
+	src/test1.cpp
+	src/test2.cpp
 )
 
 set(SHADERS
