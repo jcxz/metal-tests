@@ -11,4 +11,9 @@
 #define MTL_KERNEL static inline
 #include <cstdint>
 typedef uint32_t uint;
+struct uint2
+{
+	uint x;
+	uint y;
+};
 #endif
