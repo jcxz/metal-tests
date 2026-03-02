@@ -8,6 +8,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(HEADERS
 	src/add.h
 	src/invert.h
+	src/invert2.h
 	src/common.h
 	src/mtl.h
 )
@@ -18,11 +19,13 @@ set(SOURCES
 	src/test1.cpp
 	src/test2.cpp
 	src/test3.cpp
+	src/test4.cpp
 )
 
 set(SHADERS
 	src/add.metal
 	src/invert.metal
+	src/invert2.metal
 )
 
 set_source_files_properties(${SHADERS} PROPERTIES LANGUAGE METAL)
