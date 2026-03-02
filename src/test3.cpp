@@ -99,9 +99,23 @@ static void InvertGPU(
 	MTL::CommandBuffer* pCommandBuffer = pCommandQueue->commandBuffer();
 	MTL::ComputeCommandEncoder* pEncoder = pCommandBuffer->computeCommandEncoder();
 
+	// bind the compute pipeline
 	pEncoder->setComputePipelineState(pPSO);
-	pEncoder->setBuffer(src, 0, 0);
-	pEncoder->setBuffer(dst, 0, 1);
+
+	// set up an argument buffer for the InvertArgs struct
+	InvertArgs args;
+	args.src = reinterpret_cast<uint8_t*>(src->gpuAddress());
+	args.dst = reinterpret_cast<uint8_t*>(dst->gpuAddress());
+	args.srcStride = srcStride;
+	args.dstStride = dstStride;
+
+	pEncoder->setBytes(&args, sizeof(args), 0);
+	// this is needed so that Metal knows that these buffers are actually
+	// used by the current command buffer (it does not know what is inside
+	// the blob passed on the line above). I imagine this is like the Resource State
+	// flag that I tracked in my Vulkan renderer so that I could do automatic barrier transitions.
+	pEncoder->useResource(src, MTL::ResourceUsageRead);
+	pEncoder->useResource(dst, MTL::ResourceUsageWrite);
 
 	MTL::Size gridSize = MTL::Size(w, h, 1);
 	MTL::Size threadsPerThreadgroup = MTL::Size(pPSO->maxTotalThreadsPerThreadgroup(), 1, 1);
@@ -174,7 +188,7 @@ bool test3()
 
 	// compute on GPU
 	auto gpu_t0 = std::chrono::high_resolution_clock::now();
-	//InvertGPU(pCommandQueue.get(), pPSO.get(), bufSrc.get(), W * sizeof(uint8_t), resGPU.get(), W * sizeof(uint8_t), W, H);
+	InvertGPU(pCommandQueue.get(), pPSO.get(), bufSrc.get(), W * sizeof(uint8_t), resGPU.get(), W * sizeof(uint8_t), W, H);
 	auto gpu_t1 = std::chrono::high_resolution_clock::now();
 
 	// write outputs as images
