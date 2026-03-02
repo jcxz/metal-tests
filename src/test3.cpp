@@ -6,8 +6,37 @@
 #include <iostream>
 
 
+static bool WritePPM(
+	const char* const path,
+	const uint8_t* const pData,
+	const size_t strideBytes,
+	const uint32_t width,
+	const uint32_t height)
+{
+	FILE* f = fopen(path, "w");
+	if (f == nullptr)
+	{
+		std::cerr << "Failed to open " << path << " for writing" << std::endl;
+		return false;
+	}
 
-static void GenerateData(uint8_t* data, const uint32_t w, const uint32_t h)
+	fprintf(f, "%s\n%d %d\n255\n", "P2", width, height);
+
+	for (uint32_t y = 0; y < height; y++)
+	{
+		const uint8_t* pLine = pData + strideBytes * y;
+		for (uint32_t x = 0; x < width; ++x)
+		{
+			fprintf(f, "%d\n", pLine[x]);
+		}
+	}
+
+	fclose(f);
+
+	return true;
+}
+
+static void GenerateRandom(uint8_t* data, const uint32_t w, const uint32_t h)
 {
 	static std::random_device sRngSeed;
 	static std::mt19937 sRng(sRngSeed());
@@ -22,6 +51,18 @@ static void GenerateData(uint8_t* data, const uint32_t w, const uint32_t h)
 	}
 }
 
+static void GenerateCheckerboard(uint8_t* data, const uint32_t w, const uint32_t h)
+{
+	static constexpr uint32_t patternSize = 16;
+	for (uint32_t y = 0; y < h; ++y)
+	{
+		for (uint32_t x = 0; x < w; ++x)
+		{
+			data[x + y * w] = (x / patternSize + y / patternSize) & 1u ? 0 : 255;
+		}
+	}
+}
+
 static void InvertCPU(
 	const uint8_t* src,
 	const uint32_t srcStride,
@@ -30,15 +71,15 @@ static void InvertCPU(
 	const uint32_t w,
 	const uint32_t h)
 {
+	InvertArgs args;
+	args.src = src;
+	args.dst = dst;
+	args.srcStride = srcStride;
+	args.dstStride = dstStride;
 	for (uint32_t y = 0; y < h; ++y)
 	{
 		for (uint32_t x = 0; x < w; ++x)
 		{
-			InvertArgs args;
-			args.src = src;
-			args.dst = dst;
-			args.srcStride = srcStride;
-			args.dstStride = dstStride;
 			invert_kernel({ x, y }, args);
 		}
 	}
@@ -122,7 +163,9 @@ bool test3()
 	NS::SharedPtr<MTL::Buffer> resGPU = TransferPtr(pDevice->newBuffer(W * H * sizeof(uint8_t), MTL::ResourceStorageModeShared));
 
 	// Create input data
-	GenerateData(static_cast<unsigned char*>(bufSrc->contents()), W, H);
+	//GenerateRandom(static_cast<uint8_t*>(bufSrc->contents()), W, H);
+	GenerateCheckerboard(static_cast<uint8_t*>(bufSrc->contents()), W, H);
+	WritePPM("src.ppm", static_cast<uint8_t*>(bufSrc->contents()), W * sizeof(uint8_t), W, H);
 
 	// compute on CPU (reference)
 	auto cpu_t0 = std::chrono::high_resolution_clock::now();
@@ -134,9 +177,14 @@ bool test3()
 	//InvertGPU(pCommandQueue.get(), pPSO.get(), bufSrc.get(), W * sizeof(uint8_t), resGPU.get(), W * sizeof(uint8_t), W, H);
 	auto gpu_t1 = std::chrono::high_resolution_clock::now();
 
-	// validate results
+	// write outputs as images
 	const uint8_t* cpu = static_cast<const uint8_t*>(resCPU->contents());
+	WritePPM("cpu.ppm", cpu, W * sizeof(uint8_t), W, H);
+
 	const uint8_t* gpu = static_cast<const uint8_t*>(resGPU->contents());
+	WritePPM("gpu.ppm", gpu, W * sizeof(uint8_t), W, H);
+
+	// validate results
 	for (uint32_t y = 0; y < H; ++y)
 	{
 		for (uint32_t x = 0; x < W; ++x)
