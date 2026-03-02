@@ -100,6 +100,16 @@ static void InvertGPU(
 	// execute computation on the GPU and wait for it
 	pCommandBuffer->commit();
 	pCommandBuffer->waitUntilCompleted();
+
+	// how long the GPU took to execute the command buffer (i.e. the computation kernel)
+	const double kernelStartTime = pCommandBuffer->kernelStartTime();
+	const double kernelEndTime = pCommandBuffer->kernelEndTime();
+	const double kerneTimelMs = (kernelEndTime - kernelStartTime) * 1000.0;
+	const double gpuStartTime = pCommandBuffer->GPUStartTime();
+	const double gpuEndTime = pCommandBuffer->GPUEndTime();
+	const double gpuTimeMs = (gpuEndTime - gpuStartTime) * 1000.0;
+	std::cout << "GPU scheduling time: " << kerneTimelMs << " ms" << std::endl;
+	std::cout << "GPU execution time: " << gpuTimeMs << " ms" << std::endl;
 }
 
 
