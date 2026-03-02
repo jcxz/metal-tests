@@ -53,7 +53,7 @@ static void GenerateRandom(uint8_t* data, const uint32_t w, const uint32_t h)
 
 static void GenerateCheckerboard(uint8_t* data, const uint32_t w, const uint32_t h)
 {
-	static constexpr uint32_t patternSize = 16;
+	static constexpr uint32_t patternSize = 256; //16;
 	for (uint32_t y = 0; y < h; ++y)
 	{
 		for (uint32_t x = 0; x < w; ++x)
