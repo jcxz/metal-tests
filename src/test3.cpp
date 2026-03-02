@@ -189,7 +189,7 @@ bool test3()
 	// Create input data
 	//GenerateRandom(static_cast<uint8_t*>(bufSrc->contents()), W, H);
 	GenerateCheckerboard(static_cast<uint8_t*>(bufSrc->contents()), W, H);
-	WritePPM("src.ppm", static_cast<uint8_t*>(bufSrc->contents()), W * sizeof(uint8_t), W, H);
+	//WritePPM("src.ppm", static_cast<uint8_t*>(bufSrc->contents()), W * sizeof(uint8_t), W, H);
 
 	// compute on CPU (reference)
 	auto cpu_t0 = std::chrono::high_resolution_clock::now();
@@ -203,10 +203,10 @@ bool test3()
 
 	// write outputs as images
 	const uint8_t* cpu = static_cast<const uint8_t*>(resCPU->contents());
-	WritePPM("cpu.ppm", cpu, W * sizeof(uint8_t), W, H);
+	//WritePPM("cpu.ppm", cpu, W * sizeof(uint8_t), W, H);
 
 	const uint8_t* gpu = static_cast<const uint8_t*>(resGPU->contents());
-	WritePPM("gpu.ppm", gpu, W * sizeof(uint8_t), W, H);
+	//WritePPM("gpu.ppm", gpu, W * sizeof(uint8_t), W, H);
 
 	// validate results
 	for (uint32_t y = 0; y < H; ++y)
