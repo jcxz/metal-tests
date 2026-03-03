@@ -7,15 +7,17 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(HEADERS
 	src/add.h
+	src/common.h
 	src/invert.h
 	src/invert2.h
-	src/common.h
+	src/kernel.h
 	src/mtl.h
+	src/runner.h
 )
 
 set(SOURCES
-	src/mtl.cpp
 	src/main.cpp
+	src/mtl.cpp
 	src/test1.cpp
 	src/test2.cpp
 	src/test3.cpp
