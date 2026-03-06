@@ -69,7 +69,7 @@ struct TypeMetaInfo
 	TypeTag type;               //! the type of the property
 };
 
-#define REFL_STRUCT_FIELD_(TYPE, NAME, ARRAY)                             \
+#define REFL_DECL_STRUCT_FIELD_(TYPE, NAME, ARRAY)                        \
 	TYPE NAME ARRAY;                                                      \
 	static inline const struct NAME ## Registrar                          \
 	{                                                                     \
@@ -115,9 +115,9 @@ struct TypeMetaInfo
 		}                                                                 \
 	} NAME ## _registrar_;
 
-#define REFL_STRUCT_FIELD2(TYPE, NAME) REFL_STRUCT_FIELD_(TYPE, NAME, )
-#define REFL_STRUCT_FIELD3(TYPE, NAME, ARRAY) REFL_STRUCT_FIELD_(TYPE, NAME, ARRAY)
-#define REFL_STRUCT_FIELD(...) EM_CONCAT(REFL_STRUCT_FIELD, EM_NARGS(__VA_ARGS__))(__VA_ARGS__)
+#define REFL_DECL_STRUCT_FIELD2(TYPE, NAME) REFL_DECL_STRUCT_FIELD_(TYPE, NAME, )
+#define REFL_DECL_STRUCT_FIELD3(TYPE, NAME, ARRAY) REFL_DECL_STRUCT_FIELD_(TYPE, NAME, ARRAY)
+#define REFL_DECL_STRUCT_FIELD(...) EM_CONCAT(REFL_DECL_STRUCT_FIELD, EM_NARGS(__VA_ARGS__))(__VA_ARGS__)
 
 #define REFL_DECL_STRUCT_BEGIN(NAME)                                \
 	struct NAME                                                     \

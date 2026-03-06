@@ -12,6 +12,7 @@ set(HEADERS
 	src/gpu.h
 	src/invert.h
 	src/invert2.h
+	src/invert3.h
 	src/kernel.h
 	src/meta.h
 	src/mtl.h
@@ -27,12 +28,14 @@ set(SOURCES
 	src/test2.cpp
 	src/test3.cpp
 	src/test4.cpp
+	src/test5.cpp
 )
 
 set(SHADERS
 	src/add.metal
 	src/invert.metal
 	src/invert2.metal
+	src/invert3.metal
 )
 
 set_source_files_properties(${SHADERS} PROPERTIES LANGUAGE METAL)

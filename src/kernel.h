@@ -9,6 +9,11 @@
 #define DECL_KERNEL(ITYPE, NAME, ARGS) \
 	kernel void NAME(const ITYPE index [[thread_position_in_grid]], ARGS)
 
+#define DECL_KERNEL_ARGS_BEGIN(NAME) struct NAME {
+// TODO make variadic
+#define DECL_KERNEL_ARGS_FIELD(TYPE, NAME) TYPE NAME;
+#define DECL_KERNEL_ARGS_END(NAME) };
+
 #else
 
 #include "reflection.h"
@@ -27,6 +32,10 @@
 		static inline void Run(const IndexType index, const ArgsType& args); \
 	}; \
 	inline void NAME::Run(const IndexType index, const ArgsType& args)
+
+#define DECL_KERNEL_ARGS_BEGIN(NAME) REFL_DECL_STRUCT_BEGIN(NAME)
+#define DECL_KERNEL_ARGS_FIELD(...) REFL_DECL_STRUCT_FIELD(__VA_ARGS__)
+#define DECL_KERNEL_ARGS_END(NAME) REFL_DECL_STRUCT_END(NAME)
 
 template <typename K>
 void ExecuteKernel(const uint32_t n, const typename A::ArgsType& args)
