@@ -14,7 +14,8 @@ namespace
 
 class Gpu
 {
-	static_assert(sizeof(MTL::GPUAddress) == sizeof(uintptr_t), "MTL::GPUAddress not the same size as a pointer on CPU");
+	static_assert(sizeof(MTL::GPUAddress) == sizeof(uint64_t), "MTL::GPUAddress not the same size as uint64_t");
+	static_assert(sizeof(void*) == sizeof(uint64_t), "void* not the same size as uint64_t");
 
 private:
 	struct KernelInfo
@@ -51,10 +52,10 @@ public:
 		}
 
 		// map the allocation to CPU or get its GPU address
-		const uintptr_t ptr =
+		const uint64_t ptr =
 			mode == AllocationMode::Device ?
-			reinterpret_cast<uintptr_t>(pBuffer->gpuAddress()) :
-			reinterpret_cast<uintptr_t>(pBuffer->contents());
+			reinterpret_cast<uint64_t>(pBuffer->gpuAddress()) :
+			reinterpret_cast<uint64_t>(pBuffer->contents());
 
 		mAllocations[ptr] = pBuffer;
 		return reinterpret_cast<void*>(ptr);
@@ -63,7 +64,7 @@ public:
 	void Free(void* const ptr)
 	{
 		// remove the allocation record which should also destroy the buffer
-		mAllocations.erase(reinterpret_cast<uintptr_t>(ptr));
+		mAllocations.erase(reinterpret_cast<uint64_t>(ptr));
 	}
 
 	uint32_t RegisterKernel(const std::string& name)
@@ -232,7 +233,7 @@ private:
 			{
 				case refl::TypeTag::Pointer:
 				case refl::TypeTag::ConstPointer:
-					if (MTL::Buffer* pBuffer = GetAllocationBuffer(*reinterpret_cast<const uintptr_t*>(pArgs + info->offset))
+					if (MTL::Buffer* pBuffer = GetAllocationBuffer(*reinterpret_cast<const uint64_t*>(pArgs + info->offset)))
 					{
 						pArgEncoder->setBuffer(pBuffer, 0, info->location);
 						const NS::UInteger mode = info->type == refl::TypeTag::ConstPointer ? MTL::ResourceUsageRead : MTL::ResourceUsageRead | MTL::ResourceUsageWrite;
@@ -256,10 +257,10 @@ private:
 
 	MTL::Buffer* GetAllocationBuffer(const void* const ptr) const
 	{
-		return GetAllocationBuffer(reinterpret_cast<uintptr_t>(ptr));
+		return GetAllocationBuffer(reinterpret_cast<uint64_t>(ptr));
 	}
 
-	MTL::Buffer* GetAllocationBuffer(const uintptr_t ptr) const
+	MTL::Buffer* GetAllocationBuffer(const uint64_t ptr) const
 	{
 		const auto it = mAllocations.find(ptr);
 		if (it == mAllocations.end())
@@ -290,7 +291,7 @@ private:
 	//! argument buffer allocator (here we will store the arguments that we pass to kernels)
 	//ArgumentBufferAllocator mAllocator; // ... TODO
 	//! Let's keep it simple for now, stores references to allocated GPU buffers
-	std::unordered_map<uintptr_t, NS::SharedPtr<MTL::Buffer>> mAllocations;
+	std::unordered_map<uint64_t, NS::SharedPtr<MTL::Buffer>> mAllocations;
 };
 
 } // End of private namespace
