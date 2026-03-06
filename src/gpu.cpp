@@ -67,6 +67,11 @@ public:
 		mAllocations.erase(reinterpret_cast<uint64_t>(ptr));
 	}
 
+	void SetKernelExecutionDisabled(const bool off)
+	{
+		mKernelExecutionDisabled = off;
+	}
+
 	uint32_t RegisterKernel(const std::string& name)
 	{
 		const uint32_t id = static_cast<uint32_t>(mKernels.size());
@@ -82,6 +87,9 @@ public:
 		const void* const pArgs,
 		const refl::TypeMetaInfo* const pArgsInfo)
 	{
+		if (mKernelExecutionDisabled)
+			return false;
+
 		// an autorelease pool to make sure that any temporary (autorelease) allocations (e.g. the command buffer)
 		// get destroyed at the end of this function
 		NS::SharedPtr<NS::AutoreleasePool> pAutoReleasePool = TransferPtr(NS::AutoreleasePool::alloc()->init());
@@ -294,6 +302,8 @@ private:
 	//ArgumentBufferAllocator mAllocator; // ... TODO
 	//! Let's keep it simple for now, stores references to allocated GPU buffers
 	std::unordered_map<uint64_t, NS::SharedPtr<MTL::Buffer>> mAllocations;
+	//! whether kernels are allowed to be executed by the GPU
+	bool mKernelExecutionDisabled = false;
 };
 
 } // End of private namespace
@@ -341,4 +351,9 @@ bool ExecuteGPUKernel(
 	const refl::TypeMetaInfo* const pArgsInfo)
 {
 	return Gpu::GetInstance()->ExecuteKernel(id, nx, ny, nz, pArgs, pArgsInfo);
+}
+
+void DisableGPUKernelExecution(const bool off)
+{
+	return Gpu::GetInstance()->SetKernelExecutionDisabled(off);
 }
