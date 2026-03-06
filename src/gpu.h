@@ -24,9 +24,8 @@ extern void GpuFree(void* const ptr);
 extern uint32_t RegisterKernel(const std::string& name);
 
 //! executes a kernel on the GPU with given arguments
-//! \param id the id of the kernel to execute (this must have been registered before hand),
-//!           otherwise the call will fail
-//! \param nx specifies the execution domain (the number of work items in x, y, and z direction)
+//! \param id the id of the kernel to execute (this must have been registered before hand), otherwise the call will fail
+//! \param nx specifies the execution domain (the number of work items) in the x direction
 //! \param pArgs arguments to be passed to a kernel (this is a struct declared via reflection macros, i.e REFL_DECL_STRUCT_*)
 //! \param pArgsInfo meta information about the args structure, so that the function knows how to pass it to the GPU)
 extern bool ExecuteGPUKernel(
@@ -35,6 +34,12 @@ extern bool ExecuteGPUKernel(
 	const void* const pArgs,
 	const refl::TypeMetaInfo* const pArgsInfo);
 
+//! executes a kernel on the GPU with given arguments
+//! \param id the id of the kernel to execute (this must have been registered before hand), otherwise the call will fail
+//! \param nx specifies the execution domain (the number of work items) in the x direction
+//! \param ny specifies the execution domain (the number of work items) in the y direction
+//! \param pArgs arguments to be passed to a kernel (this is a struct declared via reflection macros, i.e REFL_DECL_STRUCT_*)
+//! \param pArgsInfo meta information about the args structure, so that the function knows how to pass it to the GPU)
 extern bool ExecuteGPUKernel(
 	const uint32_t id,
 	const uint32_t nx,
@@ -42,6 +47,13 @@ extern bool ExecuteGPUKernel(
 	const void* const pArgs,
 	const refl::TypeMetaInfo* const pArgsInfo);
 
+//! executes a kernel on the GPU with given arguments
+//! \param id the id of the kernel to execute (this must have been registered before hand), otherwise the call will fail
+//! \param nx specifies the execution domain (the number of work items) in the x direction
+//! \param ny specifies the execution domain (the number of work items) in the y direction
+//! \param nz specifies the execution domain (the number of work items) in the z direction
+//! \param pArgs arguments to be passed to a kernel (this is a struct declared via reflection macros, i.e REFL_DECL_STRUCT_*)
+//! \param pArgsInfo meta information about the args structure, so that the function knows how to pass it to the GPU)
 extern bool ExecuteGPUKernel(
 	const uint32_t id,
 	const uint32_t nx,
