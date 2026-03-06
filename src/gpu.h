@@ -1,0 +1,21 @@
+#pragma once
+
+#include "reflection.h"
+
+#include <string>
+
+
+//! registers a kernel function, so that ExecuteGPUKernel can execute it
+extern uint32_t RegisterKernel(const std::string& name);
+
+//! executes a kernel on the GPU with given arguments
+//! \param id the id of the kernel to execute (this must have been registered before hand),
+//!           otherwise the call will fail
+//! \param dims specifies the execution domain (the number of work items in x, y, and z direction)
+//! \param pArgs arguments to be passed to a kernel (this is a struct declared via reflection macros, i.e REFL_DECL_STRUCT_*)
+//! \param pArgsInfo meta information about the args structure, so that the function knows how to pass it to the GPU)
+extern bool ExecuteGPUKernel(
+	const uint32_t id,
+	const uint3 dims,
+	const void* const pArgs,
+	const TypeMetaInfo* const pArgsInfo);
