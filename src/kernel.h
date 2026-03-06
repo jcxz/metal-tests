@@ -32,7 +32,7 @@ template <typename K>
 void ExecuteKernel(const uint32_t n, const typename A::ArgsType& args)
 {
 	static_assert(std::is_same_v<typename K::IndexType, uint32_t>, "Mismatching kernel dimensionality");
-	if (!ExecuteGPUKernel(K::kName, uint3(n, 1, 1), static_cast<const void*>(&args), A::ArgsType::kMetaInfo))
+	if (!ExecuteGPUKernel(K::kName, n, static_cast<const void*>(&args), A::ArgsType::kMetaInfo))
 	{
 		for (uint32_t i = 0; i < n; ++i)
 		{
@@ -42,14 +42,14 @@ void ExecuteKernel(const uint32_t n, const typename A::ArgsType& args)
 }
 
 template <typename K>
-void ExecuteKernel(const uint2 dims, const typename A::ArgsType& args)
+void ExecuteKernel(const uint32_t nx, const uint32_t ny, const typename A::ArgsType& args)
 {
 	static_assert(std::is_same_v<typename K::IndexType, uint2>, "Mismatching kernel dimensionality");
-	if (!ExecuteGPUKernel(K::kName, uint3(dims.x, dims.y, 1), static_cast<const void*>(&args), A::ArgsType::kMetaInfo))
+	if (!ExecuteGPUKernel(K::kName, nx, ny, static_cast<const void*>(&args), A::ArgsType::kMetaInfo))
 	{
-		for (uint32_t y = 0; y < dims.y; ++y)
+		for (uint32_t y = 0; y < ny; ++y)
 		{
-			for (uint32_t x = 0; x < dims.x; ++x)
+			for (uint32_t x = 0; x < nx; ++x)
 			{
 				K::Run(uint2(x, y), args);
 			}
@@ -58,16 +58,16 @@ void ExecuteKernel(const uint2 dims, const typename A::ArgsType& args)
 }
 
 template <typename K>
-void ExecuteKernel(const uint3 dims, const typename A::ArgsType& args)
+void ExecuteKernel(const uint32_t nx, const uint32_t ny, const uint32_t nz, const typename A::ArgsType& args)
 {
 	static_assert(std::is_same_v<typename K::IndexType, uint3>, "Mismatching kernel dimensionality");
-	if (!ExecuteGPUKernel(K::kName, dims, static_cast<const void*>(&args), A::ArgsType::kMetaInfo))
+	if (!ExecuteGPUKernel(K::kName, nx, ny, nz, static_cast<const void*>(&args), A::ArgsType::kMetaInfo))
 	{
-		for (uint32_t z = 0; z < dims.z; ++z)
+		for (uint32_t z = 0; z < nz; ++z)
 		{
-			for (uint32_t y = 0; y < dims.y; ++y)
+			for (uint32_t y = 0; y < ny; ++y)
 			{
-				for (uint32_t x = 0; x < dims.x; ++x)
+				for (uint32_t x = 0; x < nx; ++x)
 				{
 					K::Run(uint3(x, y, z), args);
 				}

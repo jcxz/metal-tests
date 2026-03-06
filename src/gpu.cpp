@@ -38,7 +38,9 @@ public:
 
 	bool ExecuteKernel(
 		const uint32_t id,
-		const simd::uint3 dims,
+		const uint32_t nx,
+		const uint32_t ny,
+		const uint32_t nz,
 		const void* const pArgs,
 		const refl::TypeMetaInfo* const pArgsInfo)
 	{
@@ -77,8 +79,8 @@ public:
 		}
 
 		// equeue kernel dispatch
-		const MTL::Size gridSize(dims.x, dims.y, dims.z);
-		const MTL::Size groupSize(pKernel->pPSO->maxTotalThreadsPerThreadgroup(), 1, 1);
+		const MTL::Size gridSize(nx, ny, nz);
+		const MTL::Size groupSize(pKernel->pPSO->maxTotalThreadsPerThreadgroup(), 1, 1);  // TODO
 		pEncoder->dispatchThreads(gridSize, groupSize);
 
 		// finish encoding and execute computation on the GPU and wait for it
@@ -244,9 +246,30 @@ uint32_t RegisterKernel(const std::string& name)
 
 bool ExecuteGPUKernel(
 	const uint32_t id,
-	const simd::uint3 dims,
+	const uint32_t nx,
 	const void* const pArgs,
 	const refl::TypeMetaInfo* const pArgsInfo)
 {
-	return Gpu::GetInstance()->ExecuteKernel(id, dims, pArgs, pArgsInfo);
+	return Gpu::GetInstance()->ExecuteKernel(id, nx, 1, 1, pArgs, pArgsInfo);
+}
+
+bool ExecuteGPUKernel(
+	const uint32_t id,
+	const uint32_t nx,
+	const uint32_t ny,
+	const void* const pArgs,
+	const refl::TypeMetaInfo* const pArgsInfo)
+{
+	return Gpu::GetInstance()->ExecuteKernel(id, nx, ny, 1, pArgs, pArgsInfo);
+}
+
+bool ExecuteGPUKernel(
+	const uint32_t id,
+	const uint32_t nx,
+	const uint32_t ny,
+	const uint32_t nz,
+	const void* const pArgs,
+	const refl::TypeMetaInfo* const pArgsInfo)
+{
+	return Gpu::GetInstance()->ExecuteKernel(id, nx, ny, nz, pArgs, pArgsInfo);
 }
