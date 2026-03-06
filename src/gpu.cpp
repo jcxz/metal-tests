@@ -135,6 +135,8 @@ public:
 		const double gpuTimeMs = (gpuEndTime - gpuStartTime) * 1000.0;
 		std::cout << "GPU scheduling time: " << kerneTimelMs << " ms" << std::endl;
 		std::cout << "GPU execution time: " << gpuTimeMs << " ms" << std::endl;
+
+		return true;
 	}
 
 	static Gpu* GetInstance()
