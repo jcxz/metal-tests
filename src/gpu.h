@@ -3,6 +3,7 @@
 #include "reflection.h"
 
 #include <string>
+#include <simd/simd.h>
 
 
 //! registers a kernel function, so that ExecuteGPUKernel can execute it
@@ -16,6 +17,6 @@ extern uint32_t RegisterKernel(const std::string& name);
 //! \param pArgsInfo meta information about the args structure, so that the function knows how to pass it to the GPU)
 extern bool ExecuteGPUKernel(
 	const uint32_t id,
-	const uint3 dims,
+	const simd::uint3 dims,
 	const void* const pArgs,
-	const TypeMetaInfo* const pArgsInfo);
+	const refl::TypeMetaInfo* const pArgsInfo);

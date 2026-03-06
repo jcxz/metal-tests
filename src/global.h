@@ -48,5 +48,5 @@
 		_61, _62, _63, _64, _65, _66, _67, _68, _69, _70, N, ...) N
 #endif
 
-#define AE_ASSERT assert
-#define EM_WTF(msg) EM_ASSERT(false && (exp))
+#define EM_ASSERT assert
+#define EM_WTF(msg) EM_ASSERT(false && (msg))

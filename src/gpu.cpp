@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <string>
 #include <cassert>
+#include <iostream>
 
 
 
@@ -17,23 +18,29 @@ private:
 	struct KernelInfo
 	{
 		std::string name;
-		NS::SharedPtr<MTL::Function>> pFunc;
-		NS::SharedPtr<MTL::ComputePipelineState>> pPSO;
+		NS::SharedPtr<MTL::Function> pFunc;
+		NS::SharedPtr<MTL::ComputePipelineState> pPSO;
+		KernelInfo() = default;
+		explicit KernelInfo(const std::string& name)
+			: name(name)
+			, pFunc(nullptr)
+			, pPSO(nullptr)
+		{ }
 	};
 
 public:
 	uint32_t RegisterKernel(const std::string& name)
 	{
-		const uint32_t id = mKernels.size();
-		mKernels.emplace_back(name, nullptr, nullptr);
+		const uint32_t id = static_cast<uint32_t>(mKernels.size());
+		mKernels.emplace_back(name);
 		return id;
 	}
 
 	bool ExecuteKernel(
 		const uint32_t id,
-		const uint3& dims,
+		const simd::uint3 dims,
 		const void* const pArgs,
-		const TypeMetaInfo* const pArgsInfo)
+		const refl::TypeMetaInfo* const pArgsInfo)
 	{
 		// an autorelease pool to make sure that any temporary (autorelease) allocations (e.g. the command buffer)
 		// get destroyed at the end of this function
@@ -59,7 +66,7 @@ public:
 		MTL::ComputeCommandEncoder* pEncoder = pCommandBuffer->computeCommandEncoder();
 
 		// bind the compute pipeline
-		pEncoder->setComputePipelineState(pKernel->pPSO);
+		pEncoder->setComputePipelineState(pKernel->pPSO.get());
 
 		// prepare and bind kernel arguments
 		if (!EncodeKernelArguments(pEncoder, pKernel, pArgs, pArgsInfo))
@@ -70,8 +77,8 @@ public:
 		}
 
 		// equeue kernel dispatch
-		const MTL::Size gridSize(dims.x, dims.y, dims.z)
-		const MTL::Size groupSize(pPSO->maxTotalThreadsPerThreadgroup(), 1, 1)
+		const MTL::Size gridSize(dims.x, dims.y, dims.z);
+		const MTL::Size groupSize(pKernel->pPSO->maxTotalThreadsPerThreadgroup(), 1, 1);
 		pEncoder->dispatchThreads(gridSize, groupSize);
 
 		// finish encoding and execute computation on the GPU and wait for it
@@ -137,7 +144,7 @@ private:
 		}
 	
 		auto& kernel = mKernels[id];
-		if (kernel.mpPSO == nullptr)
+		if (!kernel.pPSO)
 		{
 			// load the kernel function from shader library
 			NS::SharedPtr<MTL::Function> pFunc = TransferPtr(mpLibrary->newFunction(NS::String::string(kernel.name.c_str(), NS::UTF8StringEncoding)));
@@ -164,11 +171,11 @@ private:
 		return &kernel;
 	}
 
-	bool Gpu::EncodeKernelArguments(
+	bool EncodeKernelArguments(
 		MTL::ComputeCommandEncoder* pEncoder,
 		const KernelInfo* pKernel,
 		const void* const pArgs,
-		const TypeMetaInfo* const pArgsInfo)
+		const refl::TypeMetaInfo* const pArgsInfo)
 	{
 		// we assume that all kernels take only one argument, which is an argument buffer containing the arguments structure
 		NS::SharedPtr<MTL::ArgumentEncoder> pArgEncoder = TransferPtr(pKernel->pFunc->newArgumentEncoder(0));
@@ -180,29 +187,29 @@ private:
 		pArgEncoder->setArgumentBuffer(pArgBuffer.get(), 0);
 
 		// iterate over properties of the arguments structure and fill them up
-		for (const TypeMetaInfo* info = pArgsInfo; info; info = info->next)
+		for (const refl::TypeMetaInfo* info = pArgsInfo; info; info = info->next)
 		{
 			switch (info->type)
 			{
 				// TODO somehow decode a buffer from the args
-				case TypeTag::Pointer:
-					pArgEncoder->setBuffer(buf, 0, info->location);
-					pEncoder->useResource(buf, MTL::ResourceUsageRead | MTL::ResourceUsageWrite);
+				case refl::TypeTag::Pointer:
+					//pArgEncoder->setBuffer(buf, 0, info->location);
+					//pEncoder->useResource(buf, MTL::ResourceUsageRead | MTL::ResourceUsageWrite);
 					break;
 
-				case TypeTag::ConstPointer:
-					pArgEncoder->setBuffer(buf, 0, info->location);
-					pEncoder->useResource(buf, MTL::ResourceUsageRead);
+				case refl::TypeTag::ConstPointer:
+					//pArgEncoder->setBuffer(buf, 0, info->location);
+					//pEncoder->useResource(buf, MTL::ResourceUsageRead);
 					break;
 
 				default:
-					std::memcpy(pArgEncoder->constantDataAtIndex(info->location), reinterpret_cast<const uint8_t*>(pArgs) + info->offset, info->size);
+					std::memcpy(pArgEncoder->constantData(info->location), reinterpret_cast<const uint8_t*>(pArgs) + info->offset, info->size);
 					break;
 			}
 		}
 
 		// bind the argument buffer
-		pEncoder->setBuffer(pArgBuffer, 0, 0);
+		pEncoder->setBuffer(pArgBuffer.get(), 0, 0);
 
 		return true;
 	}
@@ -237,9 +244,9 @@ uint32_t RegisterKernel(const std::string& name)
 
 bool ExecuteGPUKernel(
 	const uint32_t id,
-	const uint3 dims,
+	const simd::uint3 dims,
 	const void* const pArgs,
-	const TypeMetaInfo* const pArgsInfo)
+	const refl::TypeMetaInfo* const pArgsInfo)
 {
 	return Gpu::GetInstance()->ExecuteKernel(id, dims, pArgs, pArgsInfo);
 }

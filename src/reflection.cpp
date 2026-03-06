@@ -1,5 +1,12 @@
 #include "reflection.h"
 
+#include <iostream>
+
+
+
+namespace refl
+{
+
 const char* TypeTagToString(const TypeTag tag)
 {
 #define CASE(lbl) case TypeTag::lbl: return #lbl
@@ -48,3 +55,5 @@ void DumpTypeInfo(const TypeMetaInfo* pMetaInfo)
 			DumpTypeInfo(info->fields);
 	}
 }
+
+} // End of namespace refl
