@@ -14,6 +14,8 @@ namespace
 
 class Gpu
 {
+	static_assert(sizeof(MTL::GPUAddress) == sizeof(uintptr_t), "MTL::GPUAddress not the same size as a pointer on CPU");
+
 private:
 	struct KernelInfo
 	{
@@ -29,6 +31,41 @@ private:
 	};
 
 public:
+	void* Alloc(const size_t size, const AllocationMode mode)
+	{
+		NS::SharedPtr<NS::AutoreleasePool> pAutoReleasePool = TransferPtr(NS::AutoreleasePool::alloc()->init());
+
+		// Initialize GPU if needed
+		if (!Init())
+		{
+			std::cerr << "Failed to initialize GPU" << std::endl;
+			return nullptr;
+		}
+
+		const MTL::ResourceOptions options = mode == AllocationMode::Device ? MTL::ResourceStorageModePrivate : MTL::ResourceStorageModeShared;
+		NS::SharedPtr<MTL::Buffer> pBuffer = TransferPtr(mpDevice->newBuffer(size, options));
+		if (!pBuffer)
+		{
+			std::cerr << "Failed to create new metal buffer" << std::endl;
+			return nullptr;
+		}
+
+		// map the allocation to CPU or get its GPU address
+		const uintptr_t ptr =
+			mode == AllocationMode::Device ?
+			reinterpret_cast<uintptr_t>(pBuffer->gpuAddress()) :
+			reinterpret_cast<uintptr_t>(pBuffer->contents());
+
+		mAllocations[ptr] = pBuffer;
+		return reinterpret_cast<void*>(ptr);
+	}
+
+	void Free(void* const ptr)
+	{
+		// remove the allocation record which should also destroy the buffer
+		mAllocations.erase(reinterpret_cast<uintptr_t>(ptr));
+	}
+
 	uint32_t RegisterKernel(const std::string& name)
 	{
 		const uint32_t id = static_cast<uint32_t>(mKernels.size());
@@ -71,7 +108,7 @@ public:
 		pEncoder->setComputePipelineState(pKernel->pPSO.get());
 
 		// prepare and bind kernel arguments
-		if (!EncodeKernelArguments(pEncoder, pKernel, pArgs, pArgsInfo))
+		if (!EncodeKernelArguments(pEncoder, pKernel, reinterpret_cast<const uint8_t*>(pArgs), pArgsInfo))
 		{
 			pEncoder->endEncoding();
 			std::cerr << "Failed to update arguments for kernel " << pKernel->name << std::endl;
@@ -176,7 +213,7 @@ private:
 	bool EncodeKernelArguments(
 		MTL::ComputeCommandEncoder* pEncoder,
 		const KernelInfo* pKernel,
-		const void* const pArgs,
+		const uint8_t* const pArgs,
 		const refl::TypeMetaInfo* const pArgsInfo)
 	{
 		// we assume that all kernels take only one argument, which is an argument buffer containing the arguments structure
@@ -193,19 +230,20 @@ private:
 		{
 			switch (info->type)
 			{
-				// TODO somehow decode a buffer from the args
 				case refl::TypeTag::Pointer:
-					//pArgEncoder->setBuffer(buf, 0, info->location);
-					//pEncoder->useResource(buf, MTL::ResourceUsageRead | MTL::ResourceUsageWrite);
-					break;
-
 				case refl::TypeTag::ConstPointer:
-					//pArgEncoder->setBuffer(buf, 0, info->location);
-					//pEncoder->useResource(buf, MTL::ResourceUsageRead);
-					break;
+					if (MTL::Buffer* pBuffer = GetAllocationBuffer(*reinterpret_cast<const uintptr_t*>(pArgs + info->offset))
+					{
+						pArgEncoder->setBuffer(pBuffer, 0, info->location);
+						const NS::UInteger mode = info->type == refl::TypeTag::ConstPointer ? MTL::ResourceUsageRead : MTL::ResourceUsageRead | MTL::ResourceUsageWrite;
+						pEncoder->useResource(pBuffer, mode);
+						break;
+					}
+					else
+						return false;
 
 				default:
-					std::memcpy(pArgEncoder->constantData(info->location), reinterpret_cast<const uint8_t*>(pArgs) + info->offset, info->size);
+					std::memcpy(pArgEncoder->constantData(info->location), pArgs + info->offset, info->size);
 					break;
 			}
 		}
@@ -214,6 +252,22 @@ private:
 		pEncoder->setBuffer(pArgBuffer.get(), 0, 0);
 
 		return true;
+	}
+
+	MTL::Buffer* GetAllocationBuffer(const void* const ptr) const
+	{
+		return GetAllocationBuffer(reinterpret_cast<uintptr_t>(ptr));
+	}
+
+	MTL::Buffer* GetAllocationBuffer(const uintptr_t ptr) const
+	{
+		const auto it = mAllocations.find(ptr);
+		if (it == mAllocations.end())
+		{
+			std::cerr << "Invalid GPU memory pointer. There is no GPU buffer mapped to address " << ptr << std::endl;
+			return nullptr;
+		}
+		return it->second.get();
 	}
 
 private:
@@ -235,9 +289,21 @@ private:
 	std::vector<KernelInfo> mKernels;
 	//! argument buffer allocator (here we will store the arguments that we pass to kernels)
 	//ArgumentBufferAllocator mAllocator; // ... TODO
+	//! Let's keep it simple for now, stores references to allocated GPU buffers
+	std::unordered_map<uintptr_t, NS::SharedPtr<MTL::Buffer>> mAllocations;
 };
 
 } // End of private namespace
+
+void* GpuAlloc(const size_t size, const AllocationMode mode)
+{
+	return Gpu::GetInstance()->Alloc(size, mode);
+}
+
+void GpuFree(void* const ptr)
+{
+	return Gpu::GetInstance()->Free(ptr);
+}
 
 uint32_t RegisterKernel(const std::string& name)
 {

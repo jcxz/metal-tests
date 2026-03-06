@@ -5,6 +5,21 @@
 #include <string>
 
 
+enum AllocationMode
+{
+	Shared = (1 << 0),
+	Device = (1 << 1),
+};
+
+//! Allocates GPU memory of a given size
+//! optional flags specify whether the allocation is exclusive to GPU and not visible to CPU
+//! or if the allocation is Shared, i.e. visible to CPU and can be mapped fro reading/writing by CPU.
+//! This is the default mode
+extern void* GpuAlloc(const size_t size, const AllocationMode mode = AllocationMode::Shared);
+
+//! deallocates the memory allocated with GpuAlloc
+extern void GpuFree(void* const ptr);
+
 //! registers a kernel function, so that ExecuteGPUKernel can execute it
 extern uint32_t RegisterKernel(const std::string& name);
 
