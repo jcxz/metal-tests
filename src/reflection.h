@@ -73,7 +73,7 @@ struct TypeMetaInfo
 	TYPE NAME ARRAY;                                                      \
 	static inline const struct NAME ## Registrar                          \
 	{                                                                     \
-		const TypeMetaInfo metaInfo;                                      \
+		const refl::TypeMetaInfo metaInfo;                                \
 		template <typename T>                                             \
 		static constexpr bool is_struct_v =                               \
 			std::is_class_v<T> &&                                         \
@@ -92,7 +92,7 @@ struct TypeMetaInfo
 			return counter;                                               \
 		}                                                                 \
 		template <typename T>                                             \
-		static const TypeMetaInfo* GetFieldList()                         \
+		static const refl::TypeMetaInfo* GetFieldList()                   \
 		{                                                                 \
 			if constexpr (is_struct_v<T>)                                 \
 				return T::kMetaInfo;                                      \
@@ -108,7 +108,7 @@ struct TypeMetaInfo
 				sizeof(NAME),                                             \
 				GetLocation<decltype(NAME)>(),                            \
 				meta::get_array_element_count<decltype(NAME)>::value,     \
-				GetTypeTag<TYPE>::value                                   \
+				refl::GetTypeTag<TYPE>::value                             \
 			}                                                             \
 		{                                                                 \
 			kMetaInfo = &metaInfo;                                        \
@@ -124,12 +124,12 @@ struct TypeMetaInfo
 	{                                                               \
 		typedef NAME Type;                                          \
 		static inline uint32_t sFieldCounter = 0;                   \
-		static inline const TypeMetaInfo* kMetaInfo = nullptr;
+		static inline const refl::TypeMetaInfo* kMetaInfo = nullptr;
 
 #define REFL_DECL_STRUCT_END(NAME)                   \
 		static inline const struct NAME ## Registrar \
 		{                                            \
-			const TypeMetaInfo metaInfo;             \
+			const refl::TypeMetaInfo metaInfo;       \
 			NAME ## Registrar()                      \
 				: metaInfo {                         \
 					nullptr,                         \
@@ -139,7 +139,7 @@ struct TypeMetaInfo
 					sizeof(NAME),                    \
 					0,                               \
 					0,                               \
-					TypeTag::Structure               \
+					refl::TypeTag::Structure         \
 				}                                    \
 			{                                        \
 				kMetaInfo = &metaInfo;               \

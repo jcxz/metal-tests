@@ -7,7 +7,7 @@
 #define MTL_CONSTANT constant
 #define MTL_DEVICE device
 #define DECL_KERNEL(ITYPE, NAME, ARGS) \
-	kernel void NAME(const ITYPE index [[thread_position_in_grid]], ARGS)
+	kernel void NAME(const ITYPE index [[thread_position_in_grid]], constant ARGS& args)
 
 #define DECL_KERNEL_ARGS_BEGIN(NAME) struct NAME {
 // TODO make variadic
@@ -19,6 +19,8 @@
 #include "reflection.h"
 #include "gpu.h"
 #include <simd/simd.h>
+
+using namespace simd; // so that the code between CPU and GPU is the same
 
 #define MTL_CONSTANT const
 #define MTL_DEVICE
@@ -38,10 +40,10 @@
 #define DECL_KERNEL_ARGS_END(NAME) REFL_DECL_STRUCT_END(NAME)
 
 template <typename K>
-void ExecuteKernel(const uint32_t n, const typename A::ArgsType& args)
+void ExecuteKernel(const uint32_t n, const typename K::ArgsType& args)
 {
 	static_assert(std::is_same_v<typename K::IndexType, uint32_t>, "Mismatching kernel dimensionality");
-	if (!ExecuteGPUKernel(K::kName, n, static_cast<const void*>(&args), A::ArgsType::kMetaInfo))
+	if (!ExecuteGPUKernel(K::kID, n, static_cast<const void*>(&args), K::ArgsType::kMetaInfo))
 	{
 		for (uint32_t i = 0; i < n; ++i)
 		{
@@ -51,26 +53,26 @@ void ExecuteKernel(const uint32_t n, const typename A::ArgsType& args)
 }
 
 template <typename K>
-void ExecuteKernel(const uint32_t nx, const uint32_t ny, const typename A::ArgsType& args)
+void ExecuteKernel(const uint32_t nx, const uint32_t ny, const typename K::ArgsType& args)
 {
 	static_assert(std::is_same_v<typename K::IndexType, uint2>, "Mismatching kernel dimensionality");
-	if (!ExecuteGPUKernel(K::kName, nx, ny, static_cast<const void*>(&args), A::ArgsType::kMetaInfo))
+	if (!ExecuteGPUKernel(K::kID, nx, ny, static_cast<const void*>(&args), K::ArgsType::kMetaInfo))
 	{
 		for (uint32_t y = 0; y < ny; ++y)
 		{
 			for (uint32_t x = 0; x < nx; ++x)
 			{
-				K::Run(uint2(x, y), args);
+				K::Run({ x, y }, args);
 			}
 		}
 	}
 }
 
 template <typename K>
-void ExecuteKernel(const uint32_t nx, const uint32_t ny, const uint32_t nz, const typename A::ArgsType& args)
+void ExecuteKernel(const uint32_t nx, const uint32_t ny, const uint32_t nz, const typename K::ArgsType& args)
 {
 	static_assert(std::is_same_v<typename K::IndexType, uint3>, "Mismatching kernel dimensionality");
-	if (!ExecuteGPUKernel(K::kName, nx, ny, nz, static_cast<const void*>(&args), A::ArgsType::kMetaInfo))
+	if (!ExecuteGPUKernel(K::kID, nx, ny, nz, static_cast<const void*>(&args), K::ArgsType::kMetaInfo))
 	{
 		for (uint32_t z = 0; z < nz; ++z)
 		{
@@ -78,7 +80,7 @@ void ExecuteKernel(const uint32_t nx, const uint32_t ny, const uint32_t nz, cons
 			{
 				for (uint32_t x = 0; x < nx; ++x)
 				{
-					K::Run(uint3(x, y, z), args);
+					K::Run({ x, y, z }, args);
 				}
 			}
 		}
