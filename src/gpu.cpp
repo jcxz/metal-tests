@@ -237,7 +237,7 @@ private:
 		pArgEncoder->setArgumentBuffer(pArgBuffer.get(), 0);
 
 		// iterate over properties of the arguments structure and fill them up
-		if (!EncodeKernelArguments(pEncoder, pArgEncoder, pArgs, pArgsInfo))
+		if (!EncodeKernelArguments(pEncoder, pArgEncoder.get(), pArgs, pArgsInfo))
 			return false;
 
 		// bind the argument buffer
