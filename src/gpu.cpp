@@ -237,17 +237,39 @@ private:
 		pArgEncoder->setArgumentBuffer(pArgBuffer.get(), 0);
 
 		// iterate over properties of the arguments structure and fill them up
+		if (!EncodeKernelArguments(pEncoder, pArgEncoder, pArgs, pArgsInfo))
+			return false;
+
+		// bind the argument buffer
+		pEncoder->setBuffer(pArgBuffer.get(), 0, 0);
+
+		return true;
+	}
+
+	bool EncodeKernelArguments(
+		MTL::ComputeCommandEncoder* pEncoder,
+		MTL::ArgumentEncoder* pArgEncoder,
+		const uint8_t* const pArgs,
+		const refl::TypeMetaInfo* const pArgsInfo)
+	{
 		for (const refl::TypeMetaInfo* info = pArgsInfo; info; info = info->next)
 		{
 			switch (info->type)
 			{
+				case refl::TypeTag::Structure:
+					if (EncodeKernelArguments(pEncoder, pArgEncoder, pArgs, info->fields))
+						break;
+					else
+						return false;
+
 				case refl::TypeTag::Pointer:
 				case refl::TypeTag::ConstPointer:
 					if (MTL::Buffer* pBuffer = GetAllocationBuffer(*reinterpret_cast<const uint64_t*>(pArgs + info->offset)))
 					{
+						static constexpr const NS::UInteger kUsageModeRW = MTL::ResourceUsageRead | MTL::ResourceUsageWrite;
+						static constexpr const NS::UInteger kUsageModeR  = MTL::ResourceUsageRead;
 						pArgEncoder->setBuffer(pBuffer, 0, info->location);
-						const NS::UInteger mode = info->type == refl::TypeTag::ConstPointer ? MTL::ResourceUsageRead : MTL::ResourceUsageRead | MTL::ResourceUsageWrite;
-						pEncoder->useResource(pBuffer, mode);
+						pEncoder->useResource(pBuffer, info->type == refl::TypeTag::ConstPointer ? kUsageModeR : kUsageModeRW);
 						break;
 					}
 					else
@@ -258,9 +280,6 @@ private:
 					break;
 			}
 		}
-
-		// bind the argument buffer
-		pEncoder->setBuffer(pArgBuffer.get(), 0, 0);
 
 		return true;
 	}
