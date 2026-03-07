@@ -82,9 +82,9 @@ bool test5()
 	GenerateCheckerboard(src, W, H);
 	//WritePPM("src.ppm", src, W * sizeof(uint8_t), W, H);
 
+	// compute on CPU (reference)
 	DisableGPUKernelExecution(true);  // do not execute kernels on the GPU, so that we can compare CPU and GPU
 
-	// compute on CPU (reference)
 	auto cpu_t0 = std::chrono::high_resolution_clock::now();
 	{
 		Invert::ArgsType args;
