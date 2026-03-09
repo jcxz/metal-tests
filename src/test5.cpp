@@ -102,7 +102,7 @@ bool test5()
 		args.srcStride = W * sizeof(uint8_t);
 		args.src = src;
 		args.dst = gpu;
-		ExecuteKernel<Invert>(W, H, args);
+		ExecuteGPUKernel<Invert>(W, H, args);
 	}
 	auto gpu_t1 = std::chrono::high_resolution_clock::now();
 
