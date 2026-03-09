@@ -83,8 +83,6 @@ bool test5()
 	//WritePPM("src.ppm", src, W * sizeof(uint8_t), W, H);
 
 	// compute on CPU (reference)
-	DisableGPUKernelExecution(true);  // do not execute kernels on the GPU, so that we can compare CPU and GPU
-
 	auto cpu_t0 = std::chrono::high_resolution_clock::now();
 	{
 		Invert::ArgsType args;
@@ -95,8 +93,6 @@ bool test5()
 		ExecuteCPUKernel<Invert>(W, H, args);
 	}
 	auto cpu_t1 = std::chrono::high_resolution_clock::now();
-
-	DisableGPUKernelExecution(false);  // reenable GPU
 
 	// compute on GPU
 	auto gpu_t0 = std::chrono::high_resolution_clock::now();

@@ -61,5 +61,3 @@ extern bool ExecuteGPUKernel(
 	const uint32_t nz,
 	const void* const pArgs,
 	const refl::TypeMetaInfo* const pArgsInfo);
-
-extern void DisableGPUKernelExecution(const bool off);
