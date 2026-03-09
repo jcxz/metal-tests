@@ -18,6 +18,7 @@ set(HEADERS
 	src/kernel_metal.h
 	src/meta.h
 	src/mtl.h
+	src/preprocessor.h
 	src/reflection.h
 )
 
