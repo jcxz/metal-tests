@@ -6,39 +6,39 @@ project(${PROJECT_NAME})
 set(CMAKE_CXX_STANDARD 17)
 
 set(HEADERS
-	src/add.h
-	src/common.h
-	src/global.h
-	src/gpu.h
-	src/invert.h
-	src/invert2.h
-	src/invert3.h
-	src/kernel.h
-	src/kernel_cpu.h
-	src/kernel_metal.h
-	src/meta.h
-	src/mtl.h
-	src/preprocessor.h
-	src/reflection.h
+	src/core/global.h
+	src/core/gpu.h
+	src/core/kernel.h
+	src/core/kernel_cpu.h
+	src/core/kernel_metal.h
+	src/core/meta.h
+	src/core/mtl.h
+	src/core/preprocessor.h
+	src/core/reflection.h
+	src/kernels/add.h
+	src/kernels/invert.h
+	src/kernels/invert2.h
+	src/kernels/invert3.h
+	src/tests/common.h
 )
 
 set(SOURCES
-	src/gpu.cpp
+	src/core/gpu.cpp
+	src/core/mtl.cpp
+	src/core/reflection.cpp
+	src/tests/test1.cpp
+	src/tests/test2.cpp
+	src/tests/test3.cpp
+	src/tests/test4.cpp
+	src/tests/test5.cpp
 	src/main.cpp
-	src/mtl.cpp
-	src/reflection.cpp
-	src/test1.cpp
-	src/test2.cpp
-	src/test3.cpp
-	src/test4.cpp
-	src/test5.cpp
 )
 
 set(SHADERS
-	src/add.metal
-	src/invert.metal
-	src/invert2.metal
-	src/invert3.metal
+	src/kernels/add.metal
+	src/kernels/invert.metal
+	src/kernels/invert2.metal
+	src/kernels/invert3.metal
 )
 
 set_source_files_properties(${SHADERS} PROPERTIES LANGUAGE METAL)
