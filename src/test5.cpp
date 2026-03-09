@@ -92,7 +92,7 @@ bool test5()
 		args.srcStride = W * sizeof(uint8_t);
 		args.src = src;
 		args.dst = cpu;
-		ExecuteKernel<Invert>(W, H, args);
+		ExecuteCPUKernel<Invert>(W, H, args);
 	}
 	auto cpu_t1 = std::chrono::high_resolution_clock::now();
 
