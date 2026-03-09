@@ -1,5 +1,5 @@
-#include "mtl.h"
-#include "invert.h"
+#include "core/mtl.h"
+#include "kernels/invert.h"
 #include <algorithm>
 #include <random>
 #include <chrono>

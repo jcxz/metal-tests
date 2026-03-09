@@ -1,6 +1,6 @@
-#include "gpu.h"
-#include "reflection.h"
-#include "mtl.h"
+#include "core/gpu.h"
+#include "core/reflection.h"
+#include "core/mtl.h"
 
 #include <unordered_map>
 #include <string>

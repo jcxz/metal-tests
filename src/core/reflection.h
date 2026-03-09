@@ -1,7 +1,7 @@
 #pragma once
 
-#include "global.h"
-#include "meta.h"
+#include "core/global.h"
+#include "core/meta.h"
 
 #include <cstdint>
 

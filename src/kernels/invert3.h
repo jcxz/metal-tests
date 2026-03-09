@@ -1,4 +1,4 @@
-#include "kernel.h"
+#include "core/kernel.h"
 
 DECL_KERNEL_ARGS_BEGIN(Args)
 	DECL_KERNEL_ARGS_FIELD(uint, dstStride)

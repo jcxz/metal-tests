@@ -1,4 +1,4 @@
-#include "common.h"
+#include "tests/common.h"
 
 MTL_KERNEL void add_kernel(
     uint index [[thread_position_in_grid]],

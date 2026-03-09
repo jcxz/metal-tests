@@ -41,7 +41,10 @@ set(SHADERS
 	src/kernels/invert3.metal
 )
 
-set_source_files_properties(${SHADERS} PROPERTIES LANGUAGE METAL)
+set_source_files_properties(
+	${SHADERS} PROPERTIES
+	LANGUAGE METAL
+	COMPILE_OPTIONS "-Isrc")
 
 add_executable(${PROJECT_NAME} ${HEADERS} ${SOURCES} ${SHADERS})
 

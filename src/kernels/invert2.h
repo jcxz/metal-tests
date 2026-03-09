@@ -1,4 +1,4 @@
-#include "common.h"
+#include "tests/common.h"
 
 
 MTL_KERNEL void invert_kernel2(

@@ -1,5 +1,5 @@
-#include "mtl.h"
-#include "add.h"
+#include "core/mtl.h"
+#include "kernels/add.h"
 #include <algorithm>
 #include <random>
 #include <chrono>

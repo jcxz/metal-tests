@@ -1,9 +1,9 @@
 #pragma once
 
 #if defined(__METAL_VERSION__)
-#include "kernel_metal.h"
+#include "core/kernel_metal.h"
 #else
-#include "kernel_cpu.h"
+#include "core/kernel_cpu.h"
 #endif
 
 #define DECL_KERNEL_1D(NAME, ARGS) DECL_KERNEL(uint, NAME, ARGS)

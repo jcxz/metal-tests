@@ -1,7 +1,7 @@
 #pragma once
 
-#include "reflection.h"
-#include "gpu.h"
+#include "core/reflection.h"
+#include "core/gpu.h"
 #include <simd/simd.h>
 
 using namespace simd; // so that the code between CPU and GPU is the same
