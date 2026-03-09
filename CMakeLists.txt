@@ -14,6 +14,8 @@ set(HEADERS
 	src/invert2.h
 	src/invert3.h
 	src/kernel.h
+	src/kernel_cpu.h
+	src/kernel_metal.h
 	src/meta.h
 	src/mtl.h
 	src/reflection.h
