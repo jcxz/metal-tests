@@ -50,19 +50,20 @@ set(GENERATED_METAL_SHADERS)
 
 foreach(SLANG ${SLANG_SHADERS})
 	add_custom_command(
-		OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/shaders/${SLANG}.metal"
+		OUTPUT "${CMAKE_BINARY_DIR}/shaders/${SLANG}.metal"
 		COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/tools/slangc"
 			"${CMAKE_CURRENT_SOURCE_DIR}/${SLANG}"
-			-o "${CMAKE_CURRENT_BINARY_DIR}/shaders/${SLANG}.metal"
+			-o "${CMAKE_BINARY_DIR}/shaders/${SLANG}.metal"
 			-profile glsl_460
 			-target metal
-			-depfile "${CMAKE_CURRENT_BINARY_DIR}/shaders/${SLANG}.d"
+			-depfile "${CMAKE_BINARY_DIR}/shaders/${SLANG}.d"
 			-I "${CMAKE_CURRENT_SOURCE_DIR}/src"
 			-D__SLANG__=1
 		DEPENDS ${SLANG}
-		DEPFILE "${CMAKE_CURRENT_BINARY_DIR}/shaders/${SLANG}.d" # to make sure that the shader recompiles when only its includes change
-		COMMENT "Slang → Metal: ${CMAKE_CURRENT_BINARY_DIR}/shaders/${SLANG}.metal")
-	list(APPEND GENERATED_METAL_SHADERS "${CMAKE_CURRENT_BINARY_DIR}/shaders/${SLANG}.metal")
+		DEPFILE "${CMAKE_BINARY_DIR}/shaders/${SLANG}.d" # to make sure that the shader recompiles when only its includes change
+		WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/slang-cache"
+		COMMENT "Slang → Metal: ${CMAKE_BINARY_DIR}/shaders/${SLANG}.metal")
+	list(APPEND GENERATED_METAL_SHADERS "${CMAKE_BINARY_DIR}/shaders/${SLANG}.metal")
 endforeach()
 
 set_source_files_properties(
