@@ -35,19 +35,42 @@ set(SOURCES
 	src/main.cpp
 )
 
-set(SHADERS
+set(METAL_SHADERS
 	src/kernels/add.metal
 	src/kernels/invert.metal
 	src/kernels/invert2.metal
 	src/kernels/invert3.metal
 )
 
+set(SLANG_SHADERS
+	src/kernels/invert3.slang
+)
+
+set(GENERATED_METAL_SHADERS)
+
+foreach(SLANG ${SLANG_SHADERS})
+	add_custom_command(
+		OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/shaders/${SLANG}.metal"
+		COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/tools/slangc"
+			"${CMAKE_CURRENT_SOURCE_DIR}/${SLANG}"
+			-o "${CMAKE_CURRENT_BINARY_DIR}/shaders/${SLANG}.metal"
+			-profile glsl_460
+			-target metal
+			-depfile "${CMAKE_CURRENT_BINARY_DIR}/shaders/${SLANG}.d"
+			-I "${CMAKE_CURRENT_SOURCE_DIR}/src"
+			-D__SLANG__=1
+		DEPENDS ${SLANG}
+		DEPFILE "${CMAKE_CURRENT_BINARY_DIR}/shaders/${SLANG}.d" # to make sure that the shader recompiles when only its includes change
+		COMMENT "Slang → Metal: ${CMAKE_CURRENT_BINARY_DIR}/shaders/${SLANG}.metal")
+	list(APPEND GENERATED_METAL_SHADERS "${CMAKE_CURRENT_BINARY_DIR}/shaders/${SLANG}.metal")
+endforeach()
+
 set_source_files_properties(
-	${SHADERS} PROPERTIES
+	${METAL_SHADERS} ${GENERATED_METAL_SHADERS} PROPERTIES
 	LANGUAGE METAL
 	COMPILE_OPTIONS "-Isrc")
 
-add_executable(${PROJECT_NAME} ${HEADERS} ${SOURCES} ${SHADERS})
+add_executable(${PROJECT_NAME} ${HEADERS} ${SOURCES} ${METAL_SHADERS} ${GENERATED_METAL_SHADERS} ${SLANG_SHADERS})
 
 # add dependencies
 include(cmake/CPM.cmake)
