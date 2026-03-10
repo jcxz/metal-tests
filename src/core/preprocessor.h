@@ -8,7 +8,7 @@
 
 //! counts the number of arguments passed to a macro
 //! taken from https://stackoverflow.com/questions/2124339/c-preprocessor-va-args-number-of-arguments
-#ifdef _MSC_VER // Microsoft compilers
+#if defined(_MSC_VER) || defined(__SLANG__)
 	#define EM_NARGS(...) EM_NARGS_EXPAND_ARGS_PRIVATE(EM_NARGS_ARGS_AUGMENTER(__VA_ARGS__))
 	#define EM_NARGS_ARGS_AUGMENTER(...) unused, __VA_ARGS__
 	#define EM_NARGS_EXPAND(x) x

@@ -1,6 +1,8 @@
 #pragma once
 
-#if defined(__METAL_VERSION__)
+#if defined (__SLANG__)
+#include "core/kernel_slang.h"
+#elif defined(__METAL_VERSION__)
 #include "core/kernel_metal.h"
 #else
 #include "core/kernel_cpu.h"
