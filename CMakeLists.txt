@@ -11,6 +11,7 @@ set(HEADERS
 	src/core/kernel.h
 	src/core/kernel_cpu.h
 	src/core/kernel_metal.h
+	src/core/kernel_slang.h
 	src/core/meta.h
 	src/core/mtl.h
 	src/core/preprocessor.h
