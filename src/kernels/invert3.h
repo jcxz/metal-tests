@@ -13,4 +13,3 @@ DECL_KERNEL_2D(Invert, Args)
 	uint8_t MTL_CONSTANT * src = args.src + index.y * args.srcStride + index.x;
 	*dst = 255 - *src;
 }
-
