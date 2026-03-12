@@ -8,7 +8,7 @@
 #define MTL_CONSTANT constant
 #define MTL_DEVICE device
 #define DECL_KERNEL(ITYPE, NAME, ARGS) \
-	kernel void NAME(const ITYPE index [[thread_position_in_grid]], constant ARGS& args [[bufer(0)]])
+	kernel void NAME(const ITYPE index [[thread_position_in_grid]], constant ARGS& args [[buffer(0)]])
 
 #define DECL_KERNEL_ARGS_BEGIN(NAME) struct NAME {
 #define DECL_KERNEL_ARGS_FIELD_(TYPE, NAME, ARRAY) TYPE NAME ARRAY;
