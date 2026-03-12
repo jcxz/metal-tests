@@ -4,6 +4,9 @@
 
 #include <metal_stdlib>
 
+// metal has its own standard library prefixed with metal namespace
+// This makes an alias for it, so that we can compile regular c++ code with less changes
+namespace std = metal;
 
 #define MTL_CONSTANT constant
 #define MTL_DEVICE device
